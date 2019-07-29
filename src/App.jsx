@@ -38,10 +38,11 @@ const App = () => {
   };
 
   const addBlog = async (title, author, url) => {
-    const success = await blogsService.addOne(title, author, url);
+    const id = await blogsService.addOne(title, author, url);
+    const success = !!id;
     if (success) {
       // Lazy load
-      setBlogs(blogs.concat([{ id: 'temporary', title, author, url }]));
+      setBlogs(blogs.concat([{ id, title, author, url }]));
       blogsService.getAll().then(blogs => setBlogs(blogs));
       showNotification(`Lisättiin blogi ${title} by ${author}`);
     } else {

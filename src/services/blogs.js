@@ -24,10 +24,12 @@ const setToken = token => {
 
 const addOne = async (title, author, url) => {
   try {
-    await axios.post(baseUrl, { title, author, url }, axiosConfig);
-    return true
+    const response = await axios.post(baseUrl, { title, author, url }, axiosConfig);
+    // return the id
+    return response.headers.location.split('/').pop();
   } catch (err) {
-    return false;
+    console.log(err);
+    return null;
   }
 };
 
