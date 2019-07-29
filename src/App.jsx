@@ -3,6 +3,7 @@ import LoginForm from './components/LoginForm';
 import SignupForm from './components/SignupForm';
 import AddBlog from './components/AddBlog';
 import Blog from './components/Blog';
+import Togglable from './components/Togglable';
 import Notification from './components/Notification';
 import blogsService from './services/blogs';
 import authService from './services/auth';
@@ -101,7 +102,9 @@ const App = () => {
       <div className="App">
         <Notification note={note} />
         <UserInfo user={user} />
-        <AddBlog handleSubmit={addBlog} />
+        <Togglable buttonLabel="Lisää blogi">
+          <AddBlog handleSubmit={addBlog} />
+        </Togglable>
         <h2>Blogit</h2>
         <BlogList blogs={blogs} />
       </div>
