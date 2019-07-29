@@ -3,6 +3,7 @@ import LoginForm from './components/LoginForm';
 import SignupForm from './components/SignupForm';
 import AddBlog from './components/AddBlog';
 import Blog from './components/Blog';
+import Notification from './components/Notification';
 import blogsService from './services/blogs';
 import authService from './services/auth';
 import cacheService from './services/cache';
@@ -12,6 +13,7 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [signup, setSignup] = useState(false);
   const [blogs, setBlogs] = useState(null);
+  const [note, setNote] = useState(null);
 
   useEffect(
     () => { blogsService.getAll().then(blogs => setBlogs(blogs)) },
@@ -29,12 +31,20 @@ const App = () => {
     [] // run only once
   );
 
+  const showNotification = (text, error) => {
+    setNote({ text, error });
+    setTimeout(() => setNote(null), 2000);
+  };
+
   const addBlog = async (title, author, url) => {
     const success = await blogsService.addOne(title, author, url);
     if (success) {
       // Lazy load
       setBlogs(blogs.concat([{ id: 'temporary', title, author, url }]));
       blogsService.getAll().then(blogs => setBlogs(blogs));
+      showNotification(`Lisättiin blogi ${title} by ${author}`);
+    } else {
+      showNotification('Paha kurki. Olisiko urli tyhjä?', true);
     }
     return success;
   };
@@ -46,6 +56,9 @@ const App = () => {
     if (authUser) {
       blogsService.setToken(authUser.token);
       cacheService.setItem(userCacheId, authUser);
+      showNotification('Kirjautuminen onnistui');
+    } else {
+      showNotification('Jotain häikkää käyttäjätunnuksessa tai salasanassa', true);
     }
   };
 
@@ -86,6 +99,7 @@ const App = () => {
   if (user) {
     return (
       <div className="App">
+        <Notification note={note} />
         <UserInfo user={user} />
         <AddBlog handleSubmit={addBlog} />
         <h2>Blogit</h2>
@@ -95,6 +109,7 @@ const App = () => {
   }
   return (
     <div className="App">
+      <Notification note={note} />
       <AuthForm signup={signup} />
     </div>
   );
