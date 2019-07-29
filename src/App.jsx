@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import LoginForm from './components/LoginForm';
 import SignupForm from './components/SignupForm';
+import AddBlog from './components/AddBlog';
 import Blog from './components/Blog';
 import blogsService from './services/blogs';
 import authService from './services/auth';
@@ -18,10 +19,25 @@ const App = () => {
   );
 
   useEffect(
-    () => { setUser(cacheService.getItem(userCacheId)) },
+    () => {
+      const authUser = cacheService.getItem(userCacheId);
+      if (authUser) {
+        setUser(authUser);
+        blogsService.setToken(authUser.token);
+      }
+    },
     [] // run only once
   );
 
+  const addBlog = async (title, author, url) => {
+    const success = await blogsService.addOne(title, author, url);
+    if (success) {
+      // Lazy load
+      setBlogs(blogs.concat([{ id: 'temporary', title, author, url }]));
+      blogsService.getAll().then(blogs => setBlogs(blogs));
+    }
+    return success;
+  };
 
   const handleLogin = async (username, password) => {
     const authUser = await authService.login(username, password);
@@ -71,6 +87,7 @@ const App = () => {
     return (
       <div className="App">
         <UserInfo user={user} />
+        <AddBlog handleSubmit={addBlog} />
         <h2>Blogit</h2>
         <BlogList blogs={blogs} />
       </div>
