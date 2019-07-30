@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import Like from './Like';
 import './Blog.scss';
 
-const Blog = ({ blog }) => {
+const Blog = ({ blog, handleLike, canDelete, handleDelete }) => {
   const [view, setView] = useState('list');
 
   if (view === 'list') {
@@ -15,10 +16,14 @@ const Blog = ({ blog }) => {
   return (
     <div className="blog-item">
       <h3 onClick={() => setView('list')}>{blog.title} &ndash; {blog.author}</h3>
-      <p>
+      <div>
         <a href={blog.url}>{blog.url}</a><br />
-        {blog.likes} likes <button>Like</button>
-      </p>
+        <Like likes={blog.likes} handleClick={() => handleLike(blog.id)} />
+        <div>
+          Added by {blog.user && blog.user.name}
+          <button onClick={() => handleDelete(blog.id)}>Delete</button>
+        </div>
+      </div>
     </div>
   );
 };

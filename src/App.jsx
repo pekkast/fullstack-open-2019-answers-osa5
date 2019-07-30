@@ -17,7 +17,7 @@ const App = () => {
   const [note, setNote] = useState(null);
 
   useEffect(
-    () => { blogsService.getAll().then(blogs => setBlogs(blogs)) },
+    () => { blogsService.getAll().then(blogs => setBlogs(sortByLikes(blogs))) },
     [] // run only once
   );
 
@@ -37,13 +37,18 @@ const App = () => {
     setTimeout(() => setNote(null), 2000);
   };
 
+  const sortByLikes = input => {
+    input.sort((a, b) => a.likes > b.likes ? -1 : 1);
+    return input;
+  };
+
   const addBlog = async (title, author, url) => {
     const id = await blogsService.addOne(title, author, url);
     const success = !!id;
     if (success) {
       // Lazy load
       setBlogs(blogs.concat([{ id, title, author, url }]));
-      blogsService.getAll().then(blogs => setBlogs(blogs));
+      blogsService.getAll().then(blogs => setBlogs(sortByLikes(blogs)));
       showNotification(`Lisättiin blogi ${title} by ${author}`);
     } else {
       showNotification('Paha kurki. Olisiko urli tyhjä?', true);
@@ -76,7 +81,20 @@ const App = () => {
     }
   };
 
-  const BlogList = ({ blogs }) => blogs && blogs.map(b => <Blog key={b.id} blog={b} />);
+  const updateBlogLikes = async id => {
+    const updatedBlogs = [...blogs];
+    const idx = updatedBlogs.findIndex(b => b.id === id);
+    await blogsService.updateLikes(id, ++updatedBlogs[idx].likes);
+    setBlogs(sortByLikes(updatedBlogs));
+  }
+
+  const deleteBlog = async id => {
+    const updatedBlogs = blogs.filter(b => b.id !== id);
+    await blogsService.remove(id);
+    setBlogs(updatedBlogs);
+  }
+
+  const BlogList = ({ blogs }) => blogs && blogs.map(b => <Blog key={b.id} blog={b} handleLike={updateBlogLikes} canDelete={!!b.user && b.user.id === user.id} handleDelete={deleteBlog} />);
 
   const AuthForm = ({ signup }) => {
     if (signup) {

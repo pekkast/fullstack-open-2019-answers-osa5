@@ -33,4 +33,12 @@ const addOne = async (title, author, url) => {
   }
 };
 
-export default { addOne, getAll, setToken };
+const updateLikes = async (id, likes) => {
+  await axios.patch(`${baseUrl}/${id}`, { likes }, axiosConfig);
+};
+
+const remove = async id => {
+  await axios.delete(`${baseUrl}/${id}`, axiosConfig);
+};
+
+export default { addOne, getAll, remove, updateLikes, setToken };
