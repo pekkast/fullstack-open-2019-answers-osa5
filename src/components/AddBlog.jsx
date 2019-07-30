@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import withToggling from './Togglable';
 
-const AddBlog = ({ handleSubmit }) => {
+const AddBlog = ({ handleSubmit, hide }) => {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [url, setUrl] = useState('');
@@ -13,6 +14,10 @@ const AddBlog = ({ handleSubmit }) => {
       setAuthor('');
       setTitle('');
       setUrl('');
+
+      if (typeof hide === 'function') {
+        hide();
+      }
     }
   };
 
@@ -54,6 +59,10 @@ const AddBlog = ({ handleSubmit }) => {
 
 AddBlog.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
+  hide: PropTypes.func,
 };
 
-export default AddBlog;
+const TogglableAddBlog = withToggling(AddBlog);
+
+export { AddBlog, TogglableAddBlog };
+export default TogglableAddBlog;
