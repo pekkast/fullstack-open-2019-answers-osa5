@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import LoginForm from './components/LoginForm';
 import SignupForm from './components/SignupForm';
 import AddBlog from './components/AddBlog';
-import Blog from './components/Blog';
+import BlogView from './components/BlogView';
 import Togglable from './components/Togglable';
 import Notification from './components/Notification';
 import blogsService from './services/blogs';
 import authService from './services/auth';
 import cacheService from './services/cache';
+
+const sortByLikes = input => {
+  input.sort((a, b) => (a.likes > b.likes ? -1 : 1));
+  return input;
+};
 
 const App = () => {
   const userCacheId = 'loggedInUser';
@@ -17,8 +23,10 @@ const App = () => {
   const [note, setNote] = useState(null);
 
   useEffect(
-    () => { blogsService.getAll().then(blogs => setBlogs(sortByLikes(blogs))) },
-    [] // run only once
+    () => {
+      blogsService.getAll().then(items => setBlogs(sortByLikes(items)));
+    },
+    [], // run only once
   );
 
   useEffect(
@@ -29,17 +37,12 @@ const App = () => {
         blogsService.setToken(authUser.token);
       }
     },
-    [] // run only once
+    [], // run only once
   );
 
   const showNotification = (text, error) => {
     setNote({ text, error });
     setTimeout(() => setNote(null), 2000);
-  };
-
-  const sortByLikes = input => {
-    input.sort((a, b) => a.likes > b.likes ? -1 : 1);
-    return input;
   };
 
   const addBlog = async (title, author, url) => {
@@ -48,7 +51,7 @@ const App = () => {
     if (success) {
       // Lazy load
       setBlogs(blogs.concat([{ id, title, author, url }]));
-      blogsService.getAll().then(blogs => setBlogs(sortByLikes(blogs)));
+      blogsService.getAll().then(items => setBlogs(sortByLikes(items)));
       showNotification(`Lisättiin blogi ${title} by ${author}`);
     } else {
       showNotification('Paha kurki. Olisiko urli tyhjä?', true);
@@ -65,7 +68,10 @@ const App = () => {
       cacheService.setItem(userCacheId, authUser);
       showNotification('Kirjautuminen onnistui');
     } else {
-      showNotification('Jotain häikkää käyttäjätunnuksessa tai salasanassa', true);
+      showNotification(
+        'Jotain häikkää käyttäjätunnuksessa tai salasanassa',
+        true,
+      );
     }
   };
 
@@ -86,35 +92,72 @@ const App = () => {
     const idx = updatedBlogs.findIndex(b => b.id === id);
     await blogsService.updateLikes(id, ++updatedBlogs[idx].likes);
     setBlogs(sortByLikes(updatedBlogs));
-  }
+  };
 
   const deleteBlog = async id => {
     const updatedBlogs = blogs.filter(b => b.id !== id);
     await blogsService.remove(id);
     setBlogs(updatedBlogs);
-  }
+  };
 
-  const BlogList = ({ blogs }) => blogs && blogs.map(b => <Blog key={b.id} blog={b} handleLike={updateBlogLikes} canDelete={!!b.user && b.user.id === user.id} handleDelete={deleteBlog} />);
+  const BlogList = ({ blogs }) =>
+    blogs &&
+    blogs.map(b => (
+      <BlogView
+        key={b.id}
+        blog={b}
+        handleLike={updateBlogLikes}
+        canDelete={!!b.user && b.user.username === user.username}
+        handleDelete={deleteBlog}
+      />
+    ));
 
   const AuthForm = ({ signup }) => {
     if (signup) {
       return (
         <div>
-          <SignupForm handleSubmit={handleSignup} /><br />
-          <a href="#login" onClick={e => { e.preventDefault(); setSignup(false)} }>Login?</a>
+          <SignupForm handleSubmit={handleSignup} />
+          <br />
+          <a
+            href="#login"
+            onClick={e => {
+              e.preventDefault();
+              setSignup(false);
+            }}
+          >
+            Login?
+          </a>
         </div>
       );
     }
 
     return (
       <div>
-        <LoginForm handleSubmit={handleLogin} /><br />
-        <a href="#signup" onClick={e => { e.preventDefault(); setSignup(true) }}>Signup?</a>
+        <LoginForm handleSubmit={handleLogin} />
+        <br />
+        <a
+          href="#signup"
+          onClick={e => {
+            e.preventDefault();
+            setSignup(true);
+          }}
+        >
+          Signup?
+        </a>
       </div>
     );
   };
 
-  const UserInfo = ({ user }) => user && <div>{user.name} logged in <button onClick={handleLogout}>Logout</button></div>;
+  AuthForm.propTypes = {
+    signup: PropTypes.bool,
+  };
+
+  const UserInfo = ({ user }) =>
+    user && (
+      <div>
+        {user.name} logged in <button onClick={handleLogout}>Logout</button>
+      </div>
+    );
 
   if (user) {
     return (
@@ -135,6 +178,6 @@ const App = () => {
       <AuthForm signup={signup} />
     </div>
   );
-}
+};
 
 export default App;

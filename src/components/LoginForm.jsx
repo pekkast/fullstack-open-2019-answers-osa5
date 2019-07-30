@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 
 const LoginForm = ({ handleSubmit }) => {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
   const emitValues = e => {
     e.preventDefault();
@@ -31,6 +32,10 @@ const LoginForm = ({ handleSubmit }) => {
       <button type="submit">Login</button>
     </form>
   );
+};
+
+LoginForm.propTypes = {
+  handleSubmit: PropTypes.func.isRequired,
 };
 
 export default LoginForm;
